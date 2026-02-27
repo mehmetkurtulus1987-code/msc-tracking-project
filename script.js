@@ -4,44 +4,50 @@ async function verileriGetir() {
     const resultCard = document.getElementById('resultCard');
 
     if (!no) {
-        alert("Lütfen numara girin.");
+        alert("Lütfen bir numara girin.");
         return;
     }
 
-    // CORS engelini aşmak için 'AllOrigins' proxy servisini kullanıyoruz
-    // Bu servis, MSC'nin verisini bizim yerimize çeker ve tarayıcıyı kandırır
-    const targetUrl = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    console.log("Alternatif sorgu metodu başlatıldı...");
+
+    // AllOrigins kullanarak veriyi ham metin (contents) olarak alıyoruz.
+    // Bu yöntem tarayıcıdaki CORS engelini aşmak için en etkili yoldur.
+    const target = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
+    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&callback=?`;
 
     try {
-        console.log("Proxy üzerinden sorgu başlatıldı...");
-        const response = await fetch(proxyUrl);
+        // fetch yerine JSONP benzeri bir yapı kullanarak engeli deliyoruz
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Bağlantı sağlanamadı.");
         
-        if (!response.ok) throw new Error("Proxy sunucusu yanıt vermedi.");
+        const data = await response.json();
+        
+        // AllOrigins veriyi 'contents' içine string olarak koyar. Bunu JSON'a geri çeviriyoruz.
+        const mscData = JSON.parse(data.contents);
+        const res = mscData.TrackingResults ? mscData.TrackingResults[0] : null;
 
-        const wrapper = await response.json();
-        // AllOrigins veriyi 'contents' alanı içinde string olarak döndürür, onu JSON'a çeviriyoruz
-        const data = JSON.parse(wrapper.contents);
-        
-        if (data.TrackingResults && data.TrackingResults.length > 0) {
-            const res = data.TrackingResults[0];
+        if (res) {
             const events = res.Events || [];
-            const lastEvent = events.length > 0 ? events[events.length - 1] : {};
-            const firstEvent = events.length > 0 ? events[0] : {};
+            const last = events.length > 0 ? events[events.length - 1] : {};
+            const first = events.length > 0 ? events[0] : {};
 
+            // HTML elementlerini doldur
             document.getElementById('res_no').innerText = res.ContainerDetail?.ContainerNumber || no;
-            document.getElementById('res_gemi').innerText = `${lastEvent.VesselName || "Bilgi Yok"} ${lastEvent.VoyageNo || ""}`.trim();
-            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Yok";
+            document.getElementById('res_gemi').innerText = `${last.VesselName || "Bilgi Yok"} ${last.VoyageNo || ""}`.trim();
+            document.getElementById('res_tesis').innerText = first.EquipmentHandling?.Name || "Bilgi Yok";
             document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilgi Yok";
             document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "Bilgi Yok";
 
+            // Sonucu göster
             resultCard.style.display = "block";
             resultCard.classList.remove('hidden');
+            console.log("Veri başarıyla işlendi.");
         } else {
-            alert("Konteyner bulunamadı.");
+            alert("Konteyner bulunamadı. Lütfen numarayı kontrol edin.");
         }
+
     } catch (error) {
-        console.error("Hata:", error);
-        alert("Bağlantı Hatası: MSC sunucusu veya Proxy şu an yanıt vermiyor.");
+        console.error("Sistem Hatası:", error);
+        alert("Bağlantı engellendi. Bu durum genellikle MSC'nin güvenlik sisteminden kaynaklanır.\n\nLütfen tarayıcınızda 'Allow CORS' eklentisinin AÇIK olduğundan emin olun.");
     }
 }
