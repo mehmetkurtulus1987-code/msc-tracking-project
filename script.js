@@ -1,56 +1,51 @@
 async function verileriGetir() {
+    // HTML'deki ID'lerle eşleştiğinden emin olun
     const input = document.getElementById('containerInput');
-    const no = input.value.trim().toUpperCase();
-    const loader = document.getElementById('loader');
+    const resNo = document.getElementById('res_no');
+    const resGemi = document.getElementById('res_gemi');
+    const resTesis = document.getElementById('res_tesis');
+    const resLiman = document.getElementById('res_liman');
+    const resTur = document.getElementById('res_tur');
     const resultCard = document.getElementById('resultCard');
 
-    if (no.length < 5) {
-        alert("Lütfen geçerli bir konteyner numarası girin.");
+    const no = input.value.trim().toUpperCase();
+
+    if (!no) {
+        alert("Lütfen bir numara girin.");
         return;
     }
 
-    // Arayüzü güncelle
-    loader.classList.remove('hidden');
-    resultCard.classList.add('hidden');
+    console.log(no + " için sorgu başlıyor...");
 
-    // CORS engelini aşmak için proxy kullanıyoruz
+    // Tarayıcı engelini aşmak için Proxy kullanımı
     const proxy = "https://corsproxy.io/?";
     const target = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
 
     try {
         const response = await fetch(proxy + encodeURIComponent(target));
-        if (!response.ok) throw new Error("Sunucu yanıt vermedi");
-
         const data = await response.json();
-        const results = data.TrackingResults[0];
+        const res = data.TrackingResults[0];
 
-        if (results) {
-            const events = results.Events || [];
+        if (res) {
+            const events = res.Events || [];
             const lastEvent = events[events.length - 1] || {};
             const firstEvent = events[0] || {};
 
-            // HTML alanlarını doldur
-            document.getElementById('res_no').innerText = results.ContainerDetail.ContainerNumber || no;
-            document.getElementById('res_gemi').innerText = `${lastEvent.VesselName || 'Bilinmiyor'} ${lastEvent.VoyageNo || ''}`;
-            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Yok";
-            document.getElementById('res_liman').innerText = results.GeneralTrackingInfo.PortOfDischarge || "Bilgi Yok";
-            document.getElementById('res_tur').innerText = results.ContainerDetail.ContainerType || "Bilgi Yok";
+            // Verileri ekrana yazdır
+            resNo.innerText = res.ContainerDetail.ContainerNumber;
+            resGemi.innerText = (lastEvent.VesselName || "") + " " + (lastEvent.VoyageNo || "");
+            resTesis.innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Yok";
+            resLiman.innerText = res.GeneralTrackingInfo.PortOfDischarge;
+            resTur.innerText = res.ContainerDetail.ContainerType;
 
+            // Kartı görünür yap (CSS'de .hidden { display: none; } olmalı)
             resultCard.classList.remove('hidden');
+            resultCard.style.display = 'block'; 
         } else {
-            alert("Konteyner bulunamadı. Lütfen numarayı kontrol edin.");
+            alert("Konteyner bulunamadı.");
         }
     } catch (error) {
-        console.error("Hata:", error);
-        alert("Veri çekilirken bir hata oluştu. MSC sunucusu isteği engellemiş olabilir.");
-    } finally {
-        loader.classList.add('hidden');
+        console.error("Sorgu hatası:", error);
+        alert("Veri çekilemedi. Tarayıcı eklentisi veya Proxy hatası olabilir.");
     }
 }
-
-// Enter tuşuyla sorgulama desteği
-document.getElementById('containerInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        verileriGetir();
-    }
-});
