@@ -8,7 +8,7 @@ async function verileriGetir() {
         return; 
     }
 
-    const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx_xji9sVQzgioXAq9kQJ9bC3DHoLQa49QR6m8K9NRa_ToYDooWaGAaS34mNzDsUE5ohg/exec";
+    const googleScriptUrl = "https://script.google.com/macros/s/AKfycbxqMC6gS3XFvQ4z3pml9mQJBB7q9YUWeaf5_y65WxKY/dev";
     const finalUrl = `${googleScriptUrl}?no=${no}`;
 
     try {
