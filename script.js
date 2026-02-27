@@ -8,46 +8,42 @@ async function verileriGetir() {
         return; 
     }
 
-    // Senin oluşturduğun Google Script URL'si
+    // Yeni aldığın Google Script URL'sini buraya tam yapıştır
     const googleScriptUrl = "https://script.google.com/macros/s/AKfycbxCiptnnc0ZgzrJaRWnKCWfOlfA845QOHb6vPQDzwGcWnMTDdvxewYgxTRHPnt6YRZOCQ/exec";
     
-    // Parametreyi ekliyoruz
     const finalUrl = `${googleScriptUrl}?no=${no}`;
 
-    console.log("Sorgu Google Sunucuları üzerinden iletiliyor: " + no);
-
     try {
-        // Google Script üzerinden veri çekme
-        const response = await fetch(finalUrl);
+        // redirect: 'follow' ekleyerek Google'ın yönlendirmesini takip ediyoruz
+        const response = await fetch(finalUrl, { redirect: 'follow' });
         
-        if (!response.ok) throw new Error("Google Script yanıt vermedi.");
+        if (!response.ok) throw new Error("Google sunucusu yanıt vermedi.");
 
         const data = await response.json();
         
+        if (data.error) {
+            throw new Error("Google Script Hatası: " + data.error);
+        }
+
         const res = data.TrackingResults ? data.TrackingResults[0] : null;
 
         if (res) {
             const events = res.Events || [];
             const last = events.length > 0 ? events[events.length - 1] : {};
-            const first = events.length > 0 ? events[0] : {};
-
-            // HTML elementlerini doldurma (kts_main.html içindeki ID'ler ile uyumlu)
+            
             document.getElementById('res_no').innerText = res.ContainerDetail?.ContainerNumber || no;
             document.getElementById('res_gemi').innerText = (last.VesselName || "") + " " + (last.VoyageNo || "");
-            document.getElementById('res_tesis').innerText = first.EquipmentHandling?.Name || "Bilgi Yok";
+            document.getElementById('res_tesis').innerText = events[0]?.EquipmentHandling?.Name || "Bilgi Yok";
             document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilgi Yok";
             document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "Bilgi Yok";
 
-            // Sonuçları göster
             resultCard.style.display = "block";
             resultCard.classList.remove('hidden');
-            
-            console.log("Veri başarıyla çekildi.");
         } else {
-            alert("Kayıt bulunamadı. Lütfen numarayı kontrol edin.");
+            alert("Kayıt bulunamadı. Numaranın doğruluğunu MSC sitesinden teyit edin.");
         }
     } catch (error) {
-        console.error("Hata detayı:", error);
-        alert("Bağlantı hatası: Google Script erişimi reddedildi veya MSC veriyi göndermedi.");
+        console.error("Hata:", error);
+        alert("Sorgulama başarısız. Google Script erişim iznini (Anyone) kontrol edin.");
     }
 }
