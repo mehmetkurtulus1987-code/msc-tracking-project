@@ -9,7 +9,7 @@ async function verileriGetir() {
     }
 
     // Senin oluşturduğun Google Script URL'si
-    const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx_xji9sVQzgioXAq9kQJ9bC3DHoLQa49QR6m8K9NRa_ToYDooWaGAaS34mNzDsUE5ohg/exec";
+    const googleScriptUrl = "https://script.google.com/macros/s/AKfycbxCiptnnc0ZgzrJaRWnKCWfOlfA845QOHb6vPQDzwGcWnMTDdvxewYgxTRHPnt6YRZOCQ/exec";
     
     // Parametreyi ekliyoruz
     const finalUrl = `${googleScriptUrl}?no=${no}`;
