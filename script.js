@@ -4,42 +4,42 @@ async function verileriGetir() {
     const resultCard = document.getElementById('resultCard');
 
     if (!no) {
-        alert("Lütfen konteyner numarası girin.");
+        alert("Lütfen bir konteyner numarası girin.");
         return;
     }
 
-    // Mobil tarayıcılar ve kısıtlı PC'ler için en kararlı aracı (AllOrigins)
-    // 'https://api.allorigins.win/get?url=' yapısı veriyi 'ham metin' olarak paketler.
-    const targetUrl = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    console.log("Sorgulanıyor: " + no);
 
-    console.log("Sorgu gönderiliyor...");
+    // Hedef MSC API adresi
+    const targetUrl = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
+    
+    // Eklentisiz çözüm için en güçlü aracı (AllOrigins)
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
     try {
         const response = await fetch(proxyUrl);
         
-        if (!response.ok) throw new Error("Proxy bağlantı hatası");
+        if (!response.ok) throw new Error("Bağlantı kurulamadı.");
 
         const wrapper = await response.json();
         
-        // Gelen veri AllOrigins tarafından 'contents' içine metin olarak gömülür.
-        // Onu JSON nesnesine çeviriyoruz.
+        // Gelen veri 'contents' içinde metin olarak saklanır, onu JSON'a çeviriyoruz
         const data = JSON.parse(wrapper.contents);
-        
-        if (data.TrackingResults && data.TrackingResults.length > 0) {
-            const res = data.TrackingResults[0];
+        const res = data.TrackingResults ? data.TrackingResults[0] : null;
+
+        if (res) {
             const events = res.Events || [];
             const lastEvent = events.length > 0 ? events[events.length - 1] : {};
             const firstEvent = events.length > 0 ? events[0] : {};
 
-            // Ekrana yazdırma işlemi
+            // HTML'deki alanları dolduruyoruz
             document.getElementById('res_no').innerText = res.ContainerDetail?.ContainerNumber || no;
-            document.getElementById('res_gemi').innerText = (lastEvent.VesselName || "Yükleniyor") + " " + (lastEvent.VoyageNo || "");
-            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Bekleniyor";
-            document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilinmiyor";
-            document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "N/A";
+            document.getElementById('res_gemi').innerText = (lastEvent.VesselName || "Bilgi Yok") + " " + (lastEvent.VoyageNo || "");
+            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Yok";
+            document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilgi Yok";
+            document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "Bilgi Yok";
 
-            // Sonuçları göster
+            // Sonuç kartını görünür yap
             resultCard.style.display = "block";
             resultCard.classList.remove('hidden');
         } else {
@@ -48,6 +48,6 @@ async function verileriGetir() {
 
     } catch (error) {
         console.error("Hata:", error);
-        alert("Erişim Engellendi: MSC sunucusu şu an bu sorguya izin vermiyor. \n\nİpucu: Mobil verinizi (4.5G) açıp sayfayı yenilemeyi deneyin.");
+        alert("Bağlantı Sorunu: MSC sunucusu şu an bu sorguyu reddetti. Lütfen birkaç dakika bekleyip tekrar deneyin veya farklı bir numara sorgulayın.");
     }
 }
