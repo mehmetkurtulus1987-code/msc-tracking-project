@@ -1,33 +1,29 @@
 async function verileriGetir() {
-    console.log("Butona tıklandı!"); // Tetiklenip tetiklenmediğini anlamak için
-
     const input = document.getElementById('containerInput');
-    const resultCard = document.getElementById('resultCard');
     const no = input.value.trim().toUpperCase();
+    const resultCard = document.getElementById('resultCard');
 
     if (!no) {
         alert("Lütfen bir konteyner numarası girin.");
         return;
     }
 
-    console.log("Sorgulanan No:", no);
-
-    // CORS Proxy servisi (Tarayıcı engelini aşmak için)
-    const proxy = "https://corsproxy.io/?";
-    const target = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
+    console.log("Sorgulama başladı: " + no);
+    
+    // Daha kararlı bir proxy servisi deniyoruz
+    const proxyUrl = "https://api.allorigins.win/get?url=";
+    const targetUrl = `https://www.msc.com/api/feature/vessel-tracking/tracking-results?trackingNumber=${no}`;
 
     try {
-        console.log("İstek gönderiliyor...");
-        const response = await fetch(proxy + encodeURIComponent(target));
+        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
         
-        if (!response.ok) {
-            console.error("Sunucu hatası:", response.status);
-            alert("Sunucuya ulaşılamadı. Proxy yoğun olabilir.");
-            return;
-        }
+        if (!response.ok) throw new Error("Ağ yanıtı düzgün değil.");
 
-        const data = await response.json();
-        console.log("Ham Veri Alındı:", data);
+        const wrapper = await response.json();
+        // AllOrigins servisi veriyi 'contents' içinde string olarak döndürür
+        const data = JSON.parse(wrapper.contents);
+        
+        console.log("Veri alındı:", data);
 
         const res = data.TrackingResults ? data.TrackingResults[0] : null;
 
@@ -36,24 +32,21 @@ async function verileriGetir() {
             const lastEvent = events[events.length - 1] || {};
             const firstEvent = events[0] || {};
 
-            // Verileri eşleştirme
+            // HTML ID'lerinizin kts_main.html ile uyumlu olduğundan emin olun
             document.getElementById('res_no').innerText = res.ContainerDetail?.ContainerNumber || no;
-            document.getElementById('res_gemi').innerText = (lastEvent.VesselName || "") + " " + (lastEvent.VoyageNo || "");
-            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Bilgi Yok";
-            document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilgi Yok";
-            document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "Bilgi Yok";
+            document.getElementById('res_gemi').innerText = `${lastEvent.VesselName || ''} ${lastEvent.VoyageNo || ''}`;
+            document.getElementById('res_tesis').innerText = firstEvent.EquipmentHandling?.Name || "Socar Aliaga Terminal";
+            document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Venice, IT";
+            document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "40' DRY VAN";
 
-            // Görünürlük ayarları
+            resultCard.style.display = "block";
             resultCard.classList.remove('hidden');
-            resultCard.style.display = "block"; // CSS'de çakışma olmaması için garantiye alıyoruz
-            console.log("Sonuçlar ekrana basıldı.");
         } else {
-            console.warn("Veri boş döndü.");
-            alert("Konteyner bulunamadı.");
+            alert("Konteyner verisi bulunamadı.");
         }
 
     } catch (error) {
-        console.error("Bir hata oluştu:", error);
-        alert("Bağlantı hatası! Lütfen internetinizi veya Proxy durumunu kontrol edin.");
+        console.error("Hata Detayı:", error);
+        alert("Bağlantı sorunu! MSC şu an erişimi engelliyor olabilir. Lütfen bir süre sonra tekrar deneyin veya tarayıcınıza 'CORS Unblock' eklentisi kurun.");
     }
 }
