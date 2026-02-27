@@ -8,22 +8,22 @@ async function verileriGetir() {
         return; 
     }
 
-    // Google Apps Script URL'niz
+    // Senin oluşturduğun Google Script URL'si
     const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx_xji9sVQzgioXAq9kQJ9bC3DHoLQa49QR6m8K9NRa_ToYDooWaGAaS34mNzDsUE5ohg/exec";
     
-    // Google Script'e 'no' parametresi ile istek atıyoruz
+    // Parametreyi ekliyoruz
     const finalUrl = `${googleScriptUrl}?no=${no}`;
 
-    console.log("Sorgu Google Sunucuları üzerinden iletiliyor...");
+    console.log("Sorgu Google Sunucuları üzerinden iletiliyor: " + no);
 
     try {
+        // Google Script üzerinden veri çekme
         const response = await fetch(finalUrl);
         
         if (!response.ok) throw new Error("Google Script yanıt vermedi.");
 
         const data = await response.json();
         
-        // Veri yapısını kontrol ediyoruz
         const res = data.TrackingResults ? data.TrackingResults[0] : null;
 
         if (res) {
@@ -31,18 +31,16 @@ async function verileriGetir() {
             const last = events.length > 0 ? events[events.length - 1] : {};
             const first = events.length > 0 ? events[0] : {};
 
-            // HTML elementlerini doldurma
+            // HTML elementlerini doldurma (kts_main.html içindeki ID'ler ile uyumlu)
             document.getElementById('res_no').innerText = res.ContainerDetail?.ContainerNumber || no;
             document.getElementById('res_gemi').innerText = (last.VesselName || "") + " " + (last.VoyageNo || "");
             document.getElementById('res_tesis').innerText = first.EquipmentHandling?.Name || "Bilgi Yok";
             document.getElementById('res_liman').innerText = res.GeneralTrackingInfo?.PortOfDischarge || "Bilgi Yok";
             document.getElementById('res_tur').innerText = res.ContainerDetail?.ContainerType || "Bilgi Yok";
 
-            // Sonuç kartını göster
+            // Sonuçları göster
             resultCard.style.display = "block";
-            if(resultCard.classList.contains('hidden')) {
-                resultCard.classList.remove('hidden');
-            }
+            resultCard.classList.remove('hidden');
             
             console.log("Veri başarıyla çekildi.");
         } else {
