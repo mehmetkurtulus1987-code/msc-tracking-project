@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSC Konteyner Takip Sistemi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-container">
+    <div class="search-box">
+        <h1>MSC CANLI TAKİP</h1>
+        <p>Lütfen konteyner numarasını giriniz:</p>
+        
+        <div class="input-group">
+            <input type="text" id="containerInput" placeholder="Örn: TCKU4101670" maxlength="11">
+            <button onclick="verileriGetir()">SORGULA</button>
+        </div>
+
+        <div id="loader" class="hidden">Veriler MSC sunucusundan çekiliyor...</div>
+    </div>
+
+    <div id="resultCard" class="result-card hidden">
+        <h3>Sorgulama Sonucu</h3>
+        <div class="data-row">
+            <span class="label">Konteyner Numarası:</span>
+            <span id="res_no" class="value">-</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Gemi Adı / Seferi:</span>
+            <span id="res_gemi" class="value">-</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Yükleme Tesisi:</span>
+            <span id="res_tesis" class="value">-</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Boşaltma Limanı:</span>
+            <span id="res_liman" class="value">-</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Konteyner Türü:</span>
+            <span id="res_tur" class="value">-</span>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
